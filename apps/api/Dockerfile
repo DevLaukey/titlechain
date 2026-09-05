@@ -21,6 +21,11 @@ COPY apps/api/ ./apps/api/
 # Build shared package first (API depends on it)
 RUN cd packages/shared && npm run build
 
+# Compile contracts so the ABI artifacts blockchain.service.ts reads at
+# runtime (packages/contracts/artifacts/contracts) exist in the image —
+# these are gitignored and not present in the build context otherwise.
+RUN cd packages/contracts && npm run compile
+
 # Generate Prisma client
 RUN cd apps/api && npx prisma generate --schema=src/prisma/schema.prisma
 
@@ -54,6 +59,16 @@ COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/src/prisma ./apps/api/src/prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Compiled contract ABIs — read at runtime by blockchain.service.ts.
+COPY --from=builder /app/packages/contracts/artifacts ./packages/contracts/artifacts
+
+# packages/contracts/deployments/<network>.json (per-network contract
+# addresses) is also gitignored and NOT produced by `hardhat compile` — it's
+# written once by `npx hardhat run scripts/deploy.ts --network baseSepolia`.
+# On Render, mount it as a Secret File at this exact path instead of baking
+# it into the image, since the addresses are specific to your one deploy.
+RUN mkdir -p ./packages/contracts/deployments
 
 # Hand ownership over to the built-in non-root user before switching
 RUN chown -R node:node /app

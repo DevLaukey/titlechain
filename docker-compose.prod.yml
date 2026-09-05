@@ -50,12 +50,17 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        # NEXT_PUBLIC_* vars are inlined at build time, not read at runtime —
+        # setting them under `environment:` below has no effect on the
+        # already-built bundle.
+        NEXT_PUBLIC_API_URL: http://localhost/api
+        NEXT_PUBLIC_HARDHAT_CHAIN_ID: ${NEXT_PUBLIC_HARDHAT_CHAIN_ID:-31337}
+        NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID: ${NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID:-84532}
     container_name: titlechain_web_prod
     restart: always
     depends_on:
       - api
-    environment:
-      NEXT_PUBLIC_API_URL: http://api:3001/api
     ports:
       - "3000:3000"
     networks:

@@ -6,7 +6,8 @@ import * as path from "path";
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
+const BASE_SEPOLIA_RPC_URL =
+  process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
 const DEPLOYER_PRIVATE_KEY =
   process.env.DEPLOYER_PRIVATE_KEY ||
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // Hardhat default account #0
@@ -30,10 +31,10 @@ const config: HardhatUserConfig = {
       url: "http://127.0.0.1:8545",
       chainId: 31337,
     },
-    sepolia: {
-      url: SEPOLIA_RPC_URL,
+    baseSepolia: {
+      url: BASE_SEPOLIA_RPC_URL,
       accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
-      chainId: 11155111,
+      chainId: 84532,
     },
   },
   typechain: {

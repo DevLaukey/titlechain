@@ -47,7 +47,7 @@ const MOCK_AUDIT_LOG: AuditEntry[] = [
     action: "BLOCKCHAIN_TX_CONFIRMED",
     entityType: "Blockchain",
     description:
-      "Title deed metadata anchored on Ethereum Sepolia testnet (block 7812044).",
+      "Title deed metadata anchored on Base Sepolia testnet (block 7812044).",
     actor: "System",
   },
   {

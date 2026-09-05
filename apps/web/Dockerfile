@@ -19,6 +19,16 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, not
+# read at runtime — they must be passed in as Docker build args (Render:
+# service Settings -> Build & Deploy -> Docker Build Arguments).
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_HARDHAT_CHAIN_ID
+ENV NEXT_PUBLIC_HARDHAT_CHAIN_ID=$NEXT_PUBLIC_HARDHAT_CHAIN_ID
+ARG NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID
+ENV NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID=$NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID
+
 # Bring in installed node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/shared/node_modules* ./packages/shared/

@@ -51,7 +51,7 @@ services:
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production-minimum-32-chars}
       HARDHAT_NETWORK: ${HARDHAT_NETWORK:-localhost}
-      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-}
+      BASE_SEPOLIA_RPC_URL: ${BASE_SEPOLIA_RPC_URL:-}
       DEPLOYER_PRIVATE_KEY: ${DEPLOYER_PRIVATE_KEY:-}
       IPFS_GATEWAY: ${IPFS_GATEWAY:-https://ipfs.io/ipfs/}
       PINATA_API_KEY: ${PINATA_API_KEY:-}

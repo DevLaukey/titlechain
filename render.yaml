@@ -1,0 +1,56 @@
+databases:
+  - name: titlechain-postgres
+    plan: free
+    databaseName: titlechain
+    user: titlechain
+
+services:
+  # ── Express API ──────────────────────────────────────────────────────────
+  - type: web
+    name: titlechain-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: titlechain-postgres
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: HARDHAT_NETWORK
+        value: baseSepolia
+      # Secrets — set these in the Render dashboard (Environment tab), not here.
+      - key: BASE_SEPOLIA_RPC_URL
+        sync: false
+      - key: DEPLOYER_PRIVATE_KEY
+        sync: false
+      - key: PINATA_API_KEY
+        sync: false
+      - key: PINATA_SECRET_KEY
+        sync: false
+      - key: GOOGLE_VISION_API_KEY
+        sync: false
+      - key: IPFS_GATEWAY
+        value: https://ipfs.io/ipfs/
+      # Update this if you rename the web service below.
+      - key: CORS_ORIGINS
+        value: https://titlechain-web.onrender.com
+
+  # ── Next.js frontend ─────────────────────────────────────────────────────
+  - type: web
+    name: titlechain-web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: .
+    dockerBuildArgs:
+      # Baked into the client bundle at build time — must match the API
+      # service's actual URL (Render assigns it as https://<name>.onrender.com).
+      NEXT_PUBLIC_API_URL: https://titlechain-api.onrender.com/api
+      NEXT_PUBLIC_HARDHAT_CHAIN_ID: "31337"
+      NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID: "84532"

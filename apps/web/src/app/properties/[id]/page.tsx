@@ -286,7 +286,7 @@ export default function PropertyDetailPage() {
                   </p>
                 </div>
                 <a
-                  href={`https://sepolia.etherscan.io/tx/${property.blockchainTxHash}`}
+                  href={`https://sepolia.basescan.org/tx/${property.blockchainTxHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-xs text-gold hover:text-gold-light transition-colors mt-2"

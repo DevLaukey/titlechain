@@ -12,7 +12,7 @@ Property fraud costs African economies billions of dollars annually — duplicat
 
 ## Our Solution
 
-TitleChain creates a fully digital property transaction pipeline anchored to the Ethereum blockchain. Every property title is registered on-chain via the `PropertyRegistry` smart contract, making ownership records immutable and publicly verifiable. Before any transaction proceeds, an AI engine performs OCR and fraud analysis on submitted documents, producing a quantified fraud score. Funds are held in the `EscrowManager` smart contract and released in milestone tranches — initial deposit, government approval, title transfer — so neither party can be cheated. A dedicated registrar workflow routes each transaction through the official government approval chain with a full, tamper-proof audit log.
+TitleChain creates a fully digital property transaction pipeline anchored to Base, an Ethereum L2. Every property title is registered on-chain via the `PropertyRegistry` smart contract, making ownership records immutable and publicly verifiable. Before any transaction proceeds, an AI engine performs OCR and fraud analysis on submitted documents, producing a quantified fraud score. Funds are held in the `EscrowManager` smart contract and released in milestone tranches — initial deposit, government approval, title transfer — so neither party can be cheated. A dedicated registrar workflow routes each transaction through the official government approval chain with a full, tamper-proof audit log.
 
 ---
 
@@ -27,7 +27,7 @@ TitleChain creates a fully digital property transaction pipeline anchored to the
 - **IPFS Document Storage** — all property documents are pinned via Pinata and referenced by content-addressed IPFS hashes stored in the database, making document tampering detectable
 - **Immutable Audit Trail** — every platform action (user registration, document upload, AI verdict, escrow funding, government approval) is written to the `AuditLog` table with an optional `blockchainHash`, giving a complete chain of custody
 - **Full Transaction Lifecycle** — seven-stage status machine (`INITIATED` → `AI_REVIEW` → `ESCROW_FUNDED` → `GOV_REVIEW` → `APPROVED` → `TRANSFER_COMPLETE`) covering the entire title transfer from offer to on-chain ownership change
-- **Production Infrastructure** — Docker multi-stage builds, nginx reverse proxy, separate `docker-compose.prod.yml`, Prisma migrations, and Hardhat deployment scripts for both local and Sepolia testnet
+- **Production Infrastructure** — Docker multi-stage builds, nginx reverse proxy, separate `docker-compose.prod.yml`, Prisma migrations, and Hardhat deployment scripts for both local and Base Sepolia testnet
 
 ---
 
@@ -60,8 +60,8 @@ TitleChain creates a fully digital property transaction pipeline anchored to the
             │                    │                          │
             ▼                    ▼                          ▼
 ┌─────────────────┐   ┌──────────────────────┐   ┌────────────────────────┐
-│   PostgreSQL    │   │  Ethereum Network     │   │    IPFS / Pinata       │
-│   (port 5432)   │   │  Sepolia testnet  or  │   │   Document Storage     │
+│   PostgreSQL    │   │   Base Network        │   │    IPFS / Pinata       │
+│   (port 5432)   │   │  Base Sepolia  or     │   │   Document Storage     │
 │                 │   │  Hardhat local :8545  │   │  (content-addressed)   │
 │  User           │   │                       │   └────────────────────────┘
 │  KycRecord      │   │  PropertyRegistry.sol │
@@ -99,13 +99,13 @@ TitleChain creates a fully digital property transaction pipeline anchored to the
 
 | Contract | Network | Purpose |
 |---|---|---|
-| `PropertyRegistry` | Sepolia testnet / Hardhat local | Immutable on-chain registry of property titles. Stores `titleNumber`, IPFS `metadataHash`, and `currentOwner` address per `bytes32` on-chain ID. Emits `PropertyRegistered` and `PropertyTransferred` events. |
-| `EscrowManager` | Sepolia testnet / Hardhat local | Multi-milestone ETH escrow. Locks buyer funds at creation and releases individual milestones to the seller on registrar approval. `nonReentrant` on all ETH transfers. Emits `EscrowCreated`, `EscrowFunded`, `MilestoneReleased`, and `EscrowCompleted` events. |
+| `PropertyRegistry` | Base Sepolia testnet / Hardhat local | Immutable on-chain registry of property titles. Stores `titleNumber`, IPFS `metadataHash`, and `currentOwner` address per `bytes32` on-chain ID. Emits `PropertyRegistered` and `PropertyTransferred` events. |
+| `EscrowManager` | Base Sepolia testnet / Hardhat local | Multi-milestone ETH escrow. Locks buyer funds at creation and releases individual milestones to the seller on registrar approval. `nonReentrant` on all ETH transfers. Emits `EscrowCreated`, `EscrowFunded`, `MilestoneReleased`, and `EscrowCompleted` events. |
 
-Deploy to Sepolia testnet (requires `SEPOLIA_RPC_URL` and `DEPLOYER_PRIVATE_KEY` in `.env`):
+Deploy to Base Sepolia testnet (requires `BASE_SEPOLIA_RPC_URL` and `DEPLOYER_PRIVATE_KEY` in `.env`):
 
 ```bash
-cd packages/contracts && npx hardhat run scripts/deploy.ts --network sepolia
+cd packages/contracts && npx hardhat run scripts/deploy.ts --network baseSepolia
 ```
 
 Deploy to the local Hardhat node (started by `docker compose up`):
@@ -213,7 +213,7 @@ cd apps/api && npx prisma migrate dev --schema=src/prisma/schema.prisma && npx p
 
 The frontend is available at `http://localhost:3000` and the API at `http://localhost:3001/api/health`.
 
-For the full deployment guide including production Docker builds, Sepolia contract deployment, nginx configuration, and all environment variables, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+For the full deployment guide including production Docker builds, Base Sepolia contract deployment, nginx configuration, and all environment variables, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ---
 

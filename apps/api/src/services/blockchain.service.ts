@@ -73,8 +73,8 @@ class BlockchainService {
       // ── Provider ─────────────────────────────────────────────────────────
       const network = config.hardhatNetwork;
       const rpcUrl =
-        network === "sepolia"
-          ? config.sepoliaRpcUrl || "https://rpc.sepolia.org"
+        network === "baseSepolia"
+          ? config.baseSepoliaRpcUrl || "https://sepolia.base.org"
           : "http://127.0.0.1:8545";
 
       this.provider = new ethers.JsonRpcProvider(rpcUrl);

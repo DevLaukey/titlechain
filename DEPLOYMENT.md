@@ -74,8 +74,8 @@ cd packages/contracts && npx hardhat test
 # Deploy to the local Hardhat node (must be running via docker compose up)
 cd packages/contracts && npx hardhat run scripts/deploy.ts --network localhost
 
-# Deploy to Sepolia testnet (requires SEPOLIA_RPC_URL and DEPLOYER_PRIVATE_KEY in .env)
-cd packages/contracts && npx hardhat run scripts/deploy.ts --network sepolia
+# Deploy to Base Sepolia testnet (requires BASE_SEPOLIA_RPC_URL and DEPLOYER_PRIVATE_KEY in .env)
+cd packages/contracts && npx hardhat run scripts/deploy.ts --network baseSepolia
 ```
 
 ---
@@ -127,8 +127,8 @@ docker compose -f docker-compose.prod.yml down -v
 | `PORT` | API server port | No | `3001` |
 | `NODE_ENV` | Runtime environment | Yes | `production` |
 | `JWT_SECRET` | Secret for signing JWTs (min 32 chars) | Yes | `super-secret-value-change-in-prod-32c` |
-| `HARDHAT_NETWORK` | Blockchain network name | No | `localhost` or `sepolia` |
-| `SEPOLIA_RPC_URL` | Infura / Alchemy RPC endpoint for Sepolia | No | `https://sepolia.infura.io/v3/YOUR_KEY` |
+| `HARDHAT_NETWORK` | Blockchain network name | No | `localhost` or `baseSepolia` |
+| `BASE_SEPOLIA_RPC_URL` | Infura / Alchemy RPC endpoint for Base Sepolia | No | `https://sepolia.base.org` |
 | `DEPLOYER_PRIVATE_KEY` | Private key for contract deployment | No | `0x_your_private_key` |
 | `IPFS_GATEWAY` | IPFS HTTP gateway base URL | No | `https://ipfs.io/ipfs/` |
 | `PINATA_API_KEY` | Pinata IPFS pinning API key | No | `your_pinata_key` |
@@ -136,7 +136,7 @@ docker compose -f docker-compose.prod.yml down -v
 | `GOOGLE_VISION_API_KEY` | Google Cloud Vision API key (OCR / fraud detection) | No | `your_google_vision_key` |
 | `NEXT_PUBLIC_API_URL` | API base URL visible to the browser | Yes | `http://localhost:3001/api` |
 | `NEXT_PUBLIC_HARDHAT_CHAIN_ID` | Chain ID for local Hardhat network | No | `31337` |
-| `NEXT_PUBLIC_SEPOLIA_CHAIN_ID` | Chain ID for Sepolia testnet | No | `11155111` |
+| `NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID` | Chain ID for Base Sepolia testnet | No | `84532` |
 | `POSTGRES_USER` | PostgreSQL username (prod compose only) | No | `titlechain` |
 | `POSTGRES_PASSWORD` | PostgreSQL password (prod compose only) | Yes in prod | `titlechain` |
 | `POSTGRES_DB` | PostgreSQL database name (prod compose only) | No | `titlechain` |

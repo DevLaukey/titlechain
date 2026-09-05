@@ -31,7 +31,7 @@ export const config = {
 
   // Blockchain
   hardhatNetwork: optionalEnv("HARDHAT_NETWORK", "localhost"),
-  sepoliaRpcUrl: optionalEnv("SEPOLIA_RPC_URL"),
+  baseSepoliaRpcUrl: optionalEnv("BASE_SEPOLIA_RPC_URL"),
   deployerPrivateKey: optionalEnv("DEPLOYER_PRIVATE_KEY"),
 
   // IPFS
