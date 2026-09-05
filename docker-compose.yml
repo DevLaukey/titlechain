@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: titlechain_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: titlechain
+      POSTGRES_PASSWORD: titlechain
+      POSTGRES_DB: titlechain
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U titlechain -d titlechain"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  hardhat-node:
+    image: node:20-alpine
+    container_name: titlechain_hardhat
+    working_dir: /app
+    command: sh -c "npm install && npx hardhat node --hostname 0.0.0.0"
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./packages/contracts:/app
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8545 || exit 0"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: titlechain_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://titlechain:titlechain@postgres:5432/titlechain
+      PORT: 3001
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production-minimum-32-chars}
+      HARDHAT_NETWORK: ${HARDHAT_NETWORK:-localhost}
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-}
+      DEPLOYER_PRIVATE_KEY: ${DEPLOYER_PRIVATE_KEY:-}
+      IPFS_GATEWAY: ${IPFS_GATEWAY:-https://ipfs.io/ipfs/}
+      PINATA_API_KEY: ${PINATA_API_KEY:-}
+      PINATA_SECRET_KEY: ${PINATA_SECRET_KEY:-}
+      GOOGLE_VISION_API_KEY: ${GOOGLE_VISION_API_KEY:-}
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3001/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:

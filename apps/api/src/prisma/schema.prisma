@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String?
+  walletAddress   String?   @unique
+  role            UserRole  @default(BUYER)
+  kycStatus       KycStatus @default(PENDING)
+  firstName       String?
+  lastName        String?
+  phone           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  kycRecords      KycRecord[]
+  ownedProperties Property[] @relation("PropertyOwner")
+  buyerTransactions Transaction[] @relation("BuyerTransactions")
+  sellerTransactions Transaction[] @relation("SellerTransactions")
+  govApprovals    GovApproval[]
+  auditLogs       AuditLog[]
+}
+
+model KycRecord {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  documentType String
+  documentHash String
+  status       KycStatus @default(PENDING)
+  notes        String?
+  verifiedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Property {
+  id              String         @id @default(uuid())
+  titleNumber     String         @unique
+  ownerId         String
+  owner           User           @relation("PropertyOwner", fields: [ownerId], references: [id])
+  status          PropertyStatus @default(DRAFT)
+  address         String
+  city            String
+  state           String
+  country         String
+  postalCode      String?
+  landArea        Float?
+  landAreaUnit    String?
+  propertyType    String
+  estimatedValue  Decimal?
+  metadataHash    String?
+  blockchainTxHash String?
+  onChainId       String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  documents       PropertyDocument[]
+  transactions    Transaction[]
+  auditLogs       AuditLog[]
+}
+
+model PropertyDocument {
+  id             String   @id @default(uuid())
+  propertyId     String
+  property       Property @relation(fields: [propertyId], references: [id])
+  documentType   String
+  fileName       String
+  ipfsHash       String?
+  storageUrl     String?
+  aiVerified     Boolean  @default(false)
+  fraudScore     Float?
+  riskScore      Float?
+  ocrText        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  propertyId  String
+  property    Property          @relation(fields: [propertyId], references: [id])
+  buyerId     String
+  buyer       User              @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  sellerId    String
+  seller      User              @relation("SellerTransactions", fields: [sellerId], references: [id])
+  status      TransactionStatus @default(INITIATED)
+  salePrice   Decimal
+  currency    String            @default("USD")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  escrow      Escrow?
+  govApprovals GovApproval[]
+  auditLogs   AuditLog[]
+}
+
+model Escrow {
+  id              String       @id @default(uuid())
+  transactionId   String       @unique
+  transaction     Transaction  @relation(fields: [transactionId], references: [id])
+  contractAddress String?
+  amount          Decimal
+  status          EscrowStatus @default(CREATED)
+  milestones      Json
+  fundedAt        DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model GovApproval {
+  id            String   @id @default(uuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  registrarId   String
+  registrar     User     @relation(fields: [registrarId], references: [id])
+  action        String
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id              String   @id @default(uuid())
+  entityType      String
+  entityId        String
+  action          String
+  actorId         String?
+  actor           User?    @relation(fields: [actorId], references: [id])
+  propertyId      String?
+  property        Property? @relation(fields: [propertyId], references: [id])
+  transactionId   String?
+  transaction     Transaction? @relation(fields: [transactionId], references: [id])
+  metadata        Json?
+  blockchainHash  String?
+  createdAt       DateTime @default(now())
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  REGISTRAR
+  ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PropertyStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  TRANSFERRED
+}
+
+enum TransactionStatus {
+  INITIATED
+  AI_REVIEW
+  ESCROW_FUNDED
+  GOV_REVIEW
+  APPROVED
+  TRANSFER_COMPLETE
+  CANCELLED
+}
+
+enum EscrowStatus {
+  CREATED
+  FUNDED
+  PARTIALLY_RELEASED
+  COMPLETED
+  REFUNDED
+}

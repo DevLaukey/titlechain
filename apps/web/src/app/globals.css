@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-black text-[#f0f0f0];
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  * {
+    @apply border-white/10;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono), "JetBrains Mono", "Fira Code", monospace;
+  }
+}
+
+@layer components {
+  .gold-text {
+    color: #d4af37;
+  }
+
+  .card {
+    background: #0d0d0d;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[#D4AF37] text-black font-semibold rounded-lg hover:bg-[#E8C84A] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-black transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 border border-[#D4AF37] text-[#D4AF37] bg-transparent font-semibold rounded-lg hover:bg-[#D4AF37]/10 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 text-white/60 font-medium rounded-lg hover:bg-white/5 focus:outline-none transition-colors duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-[#111111] border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] transition-colors duration-200;
+  }
+
+  .badge-status {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-pending {
+    @apply badge-status bg-amber-400/10 text-amber-400 border border-amber-400/20;
+  }
+
+  .badge-approved {
+    @apply badge-status bg-emerald-400/10 text-emerald-400 border border-emerald-400/20;
+  }
+
+  .badge-rejected {
+    @apply badge-status bg-red-400/10 text-red-400 border border-red-400/20;
+  }
+
+  .badge-draft {
+    @apply badge-status bg-white/5 text-white/50 border border-white/10;
+  }
+
+  .badge-transferred {
+    @apply badge-status bg-blue-400/10 text-blue-400 border border-blue-400/20;
+  }
+}
