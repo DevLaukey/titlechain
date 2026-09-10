@@ -1,5 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // node:20-alpine's Alpine version no longer ships openssl1.1-compat (it
+  // reached EOL and was dropped from the repos) — the default "linux-musl"
+  // engine target needs libssl.so.1.1 and fails to load at runtime with an
+  // unparseable error ("Could not parse schema engine response"). Target
+  // the OpenSSL 3.0 musl build instead, which matches what's actually on
+  // the image.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {

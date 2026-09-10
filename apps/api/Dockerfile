@@ -55,6 +55,17 @@ COPY apps/web/package.json ./apps/web/
 # Install only production dependencies
 RUN npm ci --omit=dev
 
+# node:20-alpine's Alpine version no longer packages openssl1.1-compat (it
+# reached EOL and was dropped from the repos). Without a detectable
+# libssl/openssl, Prisma silently falls back to fetching its legacy
+# openssl-1.1.x engine binaries, which then fail to load at runtime with an
+# unparseable error ("Could not parse schema engine response") since
+# libssl.so.1.1 doesn't exist. Installing openssl (3.x) lets Prisma detect
+# it and resolve the correct linux-musl-openssl-3.0.x engines instead —
+# must happen before the prisma install below so its postinstall engine
+# fetch picks the right target.
+RUN apk add --no-cache openssl
+
 # Install the Prisma CLI globally so migrations can run at startup.
 # The `prisma` package is a devDependency in the API workspace, so it is not
 # included in the production install above. Pinned to major version 5 to
