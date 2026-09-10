@@ -132,6 +132,21 @@ export interface CreatePropertyPayload {
   estimatedValue?: number;
 }
 
+export interface PropertyDocument {
+  id: string;
+  propertyId: string;
+  documentType: string;
+  fileName: string;
+  ipfsHash?: string | null;
+  storageUrl?: string | null;
+  aiVerified: boolean;
+  fraudScore?: number | null;
+  riskScore?: number | null;
+  ocrText?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Property {
   id: string;
   titleNumber: string;
@@ -157,6 +172,7 @@ export interface Property {
     firstName?: string | null;
     lastName?: string | null;
   };
+  documents?: PropertyDocument[];
 }
 
 export interface ListPropertiesQuery {

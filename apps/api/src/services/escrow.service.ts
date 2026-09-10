@@ -176,7 +176,7 @@ export const escrowService = {
       );
     }
 
-    const milestones = escrow.milestones as EscrowMilestone[];
+    const milestones = escrow.milestones as unknown as EscrowMilestone[];
 
     if (milestoneIndex < 0 || milestoneIndex >= milestones.length) {
       throw new AppError(
@@ -289,6 +289,6 @@ export const escrowService = {
       throw new AppError("Escrow not found", 404);
     }
 
-    return escrow.milestones as EscrowMilestone[];
+    return escrow.milestones as unknown as EscrowMilestone[];
   },
 };
