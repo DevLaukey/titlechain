@@ -3,15 +3,21 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy workspace manifests so npm can resolve all workspaces during install
-COPY package.json ./
+# Copy workspace manifests so npm can resolve all workspaces during install.
+# package-lock.json is required so `npm ci` reproduces the exact tested
+# dependency tree — without it, a plain `npm install` re-resolves from the
+# registry and can nondeterministically nest a second, conflicting copy of
+# hardhat under packages/contracts/node_modules, which then fails with
+# "HH12: Trying to use a non-local installation of Hardhat" (confirmed via
+# a local `docker build` reproducing exactly that).
+COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/contracts/package.json ./packages/contracts/
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 
 # Install all dependencies (devDependencies needed for tsc, prisma generate)
-RUN npm install
+RUN npm ci
 
 # Copy source trees needed for the API build
 COPY packages/shared/ ./packages/shared/
@@ -40,19 +46,22 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Copy workspace manifests for production dependency installation
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/contracts/package.json ./packages/contracts/
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 
 # Install only production dependencies
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 # Install the Prisma CLI globally so migrations can run at startup.
 # The `prisma` package is a devDependency in the API workspace, so it is not
-# included in the production install above.
-RUN npm install -g prisma
+# included in the production install above. Pinned to major version 5 to
+# match apps/api/package.json's prisma/@prisma/client versions — an
+# unpinned install grabs latest (7.x), whose schema format is a breaking
+# change from 5.x (datasource `url` is no longer read from schema.prisma).
+RUN npm install -g prisma@5
 
 # Copy compiled output and Prisma artifacts from builder
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist

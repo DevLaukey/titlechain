@@ -3,14 +3,17 @@ FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-# Copy workspace manifests so npm can resolve all workspaces
-COPY package.json ./
+# Copy workspace manifests so npm can resolve all workspaces.
+# package-lock.json + npm ci reproduces the exact tested dependency tree —
+# a plain `npm install` with no lockfile re-resolves from the registry and
+# can nondeterministically produce a different install each build.
+COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/contracts/package.json ./packages/contracts/
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 
-RUN npm install
+RUN npm ci
 
 # ── Stage 2: Build ────────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
