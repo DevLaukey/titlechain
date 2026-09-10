@@ -79,8 +79,12 @@ COPY --from=builder /app/packages/contracts/artifacts ./packages/contracts/artif
 # it into the image, since the addresses are specific to your one deploy.
 RUN mkdir -p ./packages/contracts/deployments
 
-# Hand ownership over to the built-in non-root user before switching
-RUN chown -R node:node /app
+# Hand ownership over to the built-in non-root user before switching.
+# Also covers the global prisma install (npm install -g above runs as
+# root) — prisma writes/rebuilds its engine binaries under its own
+# node_modules on first run, which fails with EACCES for the non-root
+# `node` user otherwise.
+RUN chown -R node:node /app /usr/local/lib/node_modules/prisma
 
 WORKDIR /app/apps/api
 
