@@ -94,7 +94,7 @@ Open each document and show the AI analysis scores:
 | TC-2024-KE-0047-Title-Deed.pdf | **0.02** | **0.08** | Yes |
 | TC-2024-KE-0047-Survey-Report.pdf | **0.01** | **0.05** | Yes |
 
-**Talking point:** These scores were produced by the AI service calling Google Cloud Vision API to OCR the document text, then running the extracted text through a fraud-indicator pipeline. A `fraudScore` below 0.10 means the document shows no signs of tampering, duplication, or inconsistent data. The OCR text for the title deed reads:
+**Talking point:** These scores were produced by the AI service's self-hosted OCR (Tesseract.js — no external API or key required) reading the document text, then running the extracted text through a rule-based fraud-indicator pipeline. A `fraudScore` below 0.10 means the document shows no signs of tampering, duplication, or inconsistent data. The OCR text for the title deed reads:
 
 > "TITLE DEED — Plot No. 24 Maple Ridge Drive, Nairobi County. Registered owner: David Osei. Area: 450 square metres. Date of registration: 12 March 2021."
 
@@ -278,7 +278,7 @@ Expected response (shape):
 
 - **End-to-end blockchain integration** — every on-chain call goes through real Solidity contracts deployed on Hardhat or Base Sepolia. `PropertyRegistry.getProperty()` and `EscrowManager.getMilestones()` are called live during the demo. There is no mock blockchain layer.
 
-- **AI fraud detection with real OCR** — the `fraudScore` and `riskScore` fields on `PropertyDocument` are produced by a pipeline that calls Google Cloud Vision API, parses the returned text annotations, and runs heuristic fraud checks. The scores in the demo (0.02, 0.08) are not hardcoded — they are the output of running the actual AI service against the seeded document content at seed time.
+- **AI fraud detection with real OCR** — the `fraudScore` and `riskScore` fields on `PropertyDocument` are produced by a self-hosted pipeline: Tesseract.js OCR (no external API, no key) extracts the document text, and a heuristic fraud-checking pass scores it. The scores in the demo (0.02, 0.08) are not hardcoded — they are the output of running the actual AI service against the seeded document content at seed time.
 
 - **Atomic database operations for government approvals** — the `POST /api/workflow/:transactionId/approve` endpoint wraps all its writes (GovApproval creation, Transaction status update, AuditLog write) in a single Prisma transaction. If any step fails, the entire approval is rolled back — the system cannot end up in a half-approved state.
 
@@ -297,7 +297,7 @@ Expected response (shape):
 | Next.js frontend (all 9 pages) | Yes | App Router, TypeScript, Tailwind |
 | Docker + nginx deployment | Yes | `docker-compose.prod.yml` with multi-stage builds |
 | Prisma schema + migrations | Yes | Versioned migrations, `migrate deploy` for CI |
-| AI fraud scoring pipeline | Yes — requires Google Vision API key | Key not bundled; configure `GOOGLE_VISION_API_KEY` in `.env` |
+| AI fraud scoring pipeline | Yes — self-hosted, no external API | Tesseract.js OCR + heuristic fraud checks, runs out of the box |
 | IPFS document storage | Yes — requires Pinata credentials | Configure `PINATA_API_KEY` and `PINATA_SECRET_KEY` in `.env` |
 | Base Sepolia testnet deployment | Yes — requires RPC URL + private key | Configure `BASE_SEPOLIA_RPC_URL` and `DEPLOYER_PRIVATE_KEY` in `.env` |
 | Demo seed data | Demo-grade | Realistic scenario but uses simulated IPFS hashes and on-chain IDs; re-run `npx prisma db seed` to reset |

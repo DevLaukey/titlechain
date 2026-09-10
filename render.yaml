@@ -33,8 +33,6 @@ services:
         sync: false
       - key: PINATA_SECRET_KEY
         sync: false
-      - key: GOOGLE_VISION_API_KEY
-        sync: false
       - key: IPFS_GATEWAY
         value: https://ipfs.io/ipfs/
       # Update this if you rename the web service below.

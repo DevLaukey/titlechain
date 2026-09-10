@@ -56,7 +56,6 @@ services:
       IPFS_GATEWAY: ${IPFS_GATEWAY:-https://ipfs.io/ipfs/}
       PINATA_API_KEY: ${PINATA_API_KEY:-}
       PINATA_SECRET_KEY: ${PINATA_SECRET_KEY:-}
-      GOOGLE_VISION_API_KEY: ${GOOGLE_VISION_API_KEY:-}
     ports:
       - "3001:3001"
     healthcheck:

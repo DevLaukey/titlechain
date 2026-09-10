@@ -133,7 +133,6 @@ docker compose -f docker-compose.prod.yml down -v
 | `IPFS_GATEWAY` | IPFS HTTP gateway base URL | No | `https://ipfs.io/ipfs/` |
 | `PINATA_API_KEY` | Pinata IPFS pinning API key | No | `your_pinata_key` |
 | `PINATA_SECRET_KEY` | Pinata IPFS pinning secret | No | `your_pinata_secret` |
-| `GOOGLE_VISION_API_KEY` | Google Cloud Vision API key (OCR / fraud detection) | No | `your_google_vision_key` |
 | `NEXT_PUBLIC_API_URL` | API base URL visible to the browser | Yes | `http://localhost:3001/api` |
 | `NEXT_PUBLIC_HARDHAT_CHAIN_ID` | Chain ID for local Hardhat network | No | `31337` |
 | `NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID` | Chain ID for Base Sepolia testnet | No | `84532` |

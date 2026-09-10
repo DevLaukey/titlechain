@@ -39,9 +39,6 @@ export const config = {
   pinataApiKey: optionalEnv("PINATA_API_KEY"),
   pinataSecretKey: optionalEnv("PINATA_SECRET_KEY"),
 
-  // AI
-  googleVisionApiKey: optionalEnv("GOOGLE_VISION_API_KEY"),
-
   // CORS — allow Next.js dev server
   corsOrigins: optionalEnv("CORS_ORIGINS", "http://localhost:3000").split(","),
 } as const;
