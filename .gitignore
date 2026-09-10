@@ -45,7 +45,6 @@ coverage/
 Thumbs.db
 
 # Prisma
-prisma/migrations/
 
 # TypeScript
 *.tsbuildinfo
