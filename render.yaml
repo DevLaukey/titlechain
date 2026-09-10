@@ -48,9 +48,15 @@ services:
     plan: free
     dockerfilePath: ./apps/web/Dockerfile
     dockerContext: .
-    dockerBuildArgs:
-      # Baked into the client bundle at build time — must match the API
-      # service's actual URL (Render assigns it as https://<name>.onrender.com).
-      NEXT_PUBLIC_API_URL: https://titlechain-api.onrender.com/api
-      NEXT_PUBLIC_HARDHAT_CHAIN_ID: "31337"
-      NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID: "84532"
+    envVars:
+      # Render automatically passes envVars through as Docker --build-arg
+      # values (matched by name to the ARGs declared in apps/web/Dockerfile),
+      # so these get baked into the client bundle at build time. Must match
+      # the API service's actual URL (Render assigns it as
+      # https://<name>.onrender.com).
+      - key: NEXT_PUBLIC_API_URL
+        value: https://titlechain-api.onrender.com/api
+      - key: NEXT_PUBLIC_HARDHAT_CHAIN_ID
+        value: "31337"
+      - key: NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID
+        value: "84532"

@@ -20,8 +20,9 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # NEXT_PUBLIC_* vars are inlined into the client bundle at build time, not
-# read at runtime — they must be passed in as Docker build args (Render:
-# service Settings -> Build & Deploy -> Docker Build Arguments).
+# read at runtime — they must be passed in as Docker build args. Render
+# auto-forwards a Docker-runtime service's envVars as --build-arg values
+# matched by name, so these are set as regular envVars in render.yaml.
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_HARDHAT_CHAIN_ID
