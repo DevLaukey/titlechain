@@ -195,7 +195,7 @@ All endpoints are prefixed with `/api`. JWT tokens are obtained from `POST /api/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/title-chain.git
+git clone https://github.com/DevLaukey/title-chain.git
 cd title-chain
 
 # 2. Install all workspace dependencies
