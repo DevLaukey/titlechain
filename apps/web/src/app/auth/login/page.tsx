@@ -72,6 +72,11 @@ const DEMO_PERSONAS: DemoPersona[] = [
   },
 ];
 
+// Baked in at build time (see apps/web/Dockerfile + render.yaml). Set
+// NEXT_PUBLIC_ENABLE_DEMO_LOGIN=false and redeploy to hide the panel once
+// the demo/judging period is over — defaults to on when unset.
+const DEMO_LOGIN_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN !== "false";
+
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>
@@ -249,49 +254,53 @@ function LoginForm() {
             </div>
           )}
 
-          <div className="mb-6">
-            <p className="text-xs font-medium text-white/50 mb-2.5 tracking-wide uppercase">
-              Quick Demo Login
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {DEMO_PERSONAS.map((persona) => {
-                const Icon = persona.icon;
-                const isActive = activePersonaId === persona.id;
-                return (
-                  <button
-                    key={persona.id}
-                    type="button"
-                    disabled={isLoading}
-                    onClick={() => handleDemoLogin(persona)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 bg-[#0d0d0d] border border-white/10 hover:border-gold/40 hover:bg-gold/5 rounded-lg text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-gold" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white text-xs font-semibold truncate">
-                        {isActive ? "Signing in..." : persona.role}
-                      </p>
-                      <p className="text-white/30 text-[11px] truncate">
-                        {persona.detail}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {DEMO_LOGIN_ENABLED && (
+            <>
+              <div className="mb-6">
+                <p className="text-xs font-medium text-white/50 mb-2.5 tracking-wide uppercase">
+                  Quick Demo Login
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {DEMO_PERSONAS.map((persona) => {
+                    const Icon = persona.icon;
+                    const isActive = activePersonaId === persona.id;
+                    return (
+                      <button
+                        key={persona.id}
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => handleDemoLogin(persona)}
+                        className="flex items-center gap-2.5 px-3 py-2.5 bg-[#0d0d0d] border border-white/10 hover:border-gold/40 hover:bg-gold/5 rounded-lg text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-4 h-4 text-gold" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">
+                            {isActive ? "Signing in..." : persona.role}
+                          </p>
+                          <p className="text-white/30 text-[11px] truncate">
+                            {persona.detail}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-3 bg-black text-white/30 tracking-widest uppercase">
-                or sign in manually
-              </span>
-            </div>
-          </div>
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-3 bg-black text-white/30 tracking-widest uppercase">
+                    or sign in manually
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

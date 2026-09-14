@@ -58,3 +58,7 @@ services:
         value: "31337"
       - key: NEXT_PUBLIC_BASE_SEPOLIA_CHAIN_ID
         value: "84532"
+      # Quick Demo Login panel on the sign-in page. Set to "false" (and
+      # redeploy) once judging/demos are over to hide it in production.
+      - key: NEXT_PUBLIC_ENABLE_DEMO_LOGIN
+        value: "true"
