@@ -3,6 +3,7 @@
 import { Suspense, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Crown, Building2, Landmark, UserCheck, Clock } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 declare global {
@@ -12,6 +13,64 @@ declare global {
     };
   }
 }
+
+interface DemoPersona {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  role: string;
+  detail: string;
+  icon: typeof Crown;
+}
+
+const DEMO_PERSONAS: DemoPersona[] = [
+  {
+    id: "admin",
+    email: "admin@titlechain.io",
+    password: "Admin@1234",
+    name: "System Administrator",
+    role: "Admin",
+    detail: "Full platform access",
+    icon: Crown,
+  },
+  {
+    id: "buyer-verified",
+    email: "alice.johnson@email.com",
+    password: "Buyer@1234",
+    name: "Alice Johnson",
+    role: "Buyer",
+    detail: "KYC verified",
+    icon: UserCheck,
+  },
+  {
+    id: "seller-verified",
+    email: "david.osei@email.com",
+    password: "Seller@1234",
+    name: "David Osei",
+    role: "Seller",
+    detail: "KYC verified",
+    icon: Building2,
+  },
+  {
+    id: "registrar",
+    email: "registrar.amara@gov.ke",
+    password: "Registrar@1234",
+    name: "Amara Diallo",
+    role: "Registrar",
+    detail: "Ministry of Lands",
+    icon: Landmark,
+  },
+  {
+    id: "buyer-pending",
+    email: "john.smith@email.com",
+    password: "User@1234",
+    name: "John Smith",
+    role: "Buyer",
+    detail: "KYC pending review",
+    icon: Clock,
+  },
+];
 
 export default function LoginPage() {
   return (
@@ -30,6 +89,7 @@ function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [activePersonaId, setActivePersonaId] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -44,6 +104,23 @@ function LoginForm() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (persona: DemoPersona) => {
+    setError(null);
+    setIsLoading(true);
+    setActivePersonaId(persona.id);
+    try {
+      await login(persona.email, persona.password);
+      router.push(redirectTo);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Sign-in failed. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+      setActivePersonaId(null);
     }
   };
 
@@ -171,6 +248,50 @@ function LoginForm() {
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
+
+          <div className="mb-6">
+            <p className="text-xs font-medium text-white/50 mb-2.5 tracking-wide uppercase">
+              Quick Demo Login
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {DEMO_PERSONAS.map((persona) => {
+                const Icon = persona.icon;
+                const isActive = activePersonaId === persona.id;
+                return (
+                  <button
+                    key={persona.id}
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => handleDemoLogin(persona)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 bg-[#0d0d0d] border border-white/10 hover:border-gold/40 hover:bg-gold/5 rounded-lg text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-gold" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white text-xs font-semibold truncate">
+                        {isActive ? "Signing in..." : persona.role}
+                      </p>
+                      <p className="text-white/30 text-[11px] truncate">
+                        {persona.detail}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-black text-white/30 tracking-widest uppercase">
+                or sign in manually
+              </span>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
