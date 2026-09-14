@@ -142,7 +142,7 @@ export default function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center space-x-2 bg-gold/10 text-gold text-xs font-medium px-4 py-2 rounded-full mb-8 border border-gold/20 tracking-wide">
             <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-            <span>LIVE IN 14 COUNTRIES ACROSS AFRICA AND THE MIDDLE EAST</span>
+            <span>AI + BLOCKCHAIN PROPERTY TRANSACTIONS</span>
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white mb-6 leading-tight tracking-tight uppercase">
             Secure Property.{" "}
