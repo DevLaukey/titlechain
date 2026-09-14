@@ -17,6 +17,9 @@ import {
   LogOut,
 } from "lucide-react";
 
+// `roles` mirrors the backend's rbac() guards for the page's primary action
+// (see apps/api/src/routes/*.routes.ts) — omit it for pages every
+// authenticated role can use.
 const navItems = [
   {
     href: "/dashboard",
@@ -32,16 +35,19 @@ const navItems = [
     href: "/properties/new",
     label: "Register Property",
     icon: PlusSquare,
+    roles: ["SELLER", "ADMIN"], // POST /property is rbac'd to SELLER/ADMIN
   },
   {
     href: "/transactions",
     label: "Transactions",
     icon: ArrowLeftRight,
+    roles: ["BUYER", "SELLER", "ADMIN"], // lists the caller's own buyer/seller transactions
   },
   {
     href: "/registrar",
     label: "Registrar Queue",
     icon: ClipboardCheck,
+    roles: ["REGISTRAR", "ADMIN"], // GET /workflow/pending is rbac'd to REGISTRAR/ADMIN
   },
   {
     href: "/escrow",
@@ -57,6 +63,7 @@ const navItems = [
     href: "/audit",
     label: "Audit Log",
     icon: ScrollText,
+    roles: ["REGISTRAR", "ADMIN"], // platform-wide oversight log, not a per-user record
   },
   {
     href: "/settings",
@@ -88,6 +95,10 @@ export default function DashboardLayout({
       ? `${user.firstName[0]}${user.lastName[0]}`
       : user?.email?.[0]?.toUpperCase() ?? "U";
 
+  const visibleNavItems = navItems.filter(
+    (item) => !item.roles || (user && item.roles.includes(user.role))
+  );
+
   return (
     <div className="flex h-screen bg-black">
       {/* Sidebar */}
@@ -104,7 +115,7 @@ export default function DashboardLayout({
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-5 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
