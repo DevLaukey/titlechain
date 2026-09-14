@@ -39,6 +39,7 @@ interface AuthContextValue {
     message: string,
     signature: string
   ) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 import React from "react";
@@ -112,6 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [saveAuth]
   );
 
+  const refreshUser = useCallback(async () => {
+    const res = await authApi.me();
+    if (res.success && res.data) {
+      setUser(res.data);
+    }
+  }, []);
+
   const connectWallet = useCallback(
     async (walletAddress: string, message: string, signature: string) => {
       const res = await authApi.walletLogin({ walletAddress, message, signature });
@@ -134,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         connectWallet,
+        refreshUser,
       },
     },
     children

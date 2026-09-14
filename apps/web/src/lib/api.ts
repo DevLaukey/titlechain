@@ -103,19 +103,41 @@ export const authApi = {
 
 // ── Identity ───────────────────────────────────────────────────────────────────
 
+export type KycDocumentType =
+  | "NATIONAL_ID"
+  | "PASSPORT"
+  | "DRIVERS_LICENSE"
+  | "UTILITY_BILL"
+  | "BANK_STATEMENT";
+
 export interface KycSubmitPayload {
-  documentType: string;
+  documentType: KycDocumentType;
   documentHash: string;
+}
+
+export interface KycRecord {
+  id: string;
+  documentType: string;
+  status: "PENDING" | "VERIFIED" | "REJECTED";
+  notes?: string | null;
+  createdAt: string;
+  verifiedAt?: string | null;
+}
+
+export interface KycStatusData {
+  userId: string;
+  kycStatus: "PENDING" | "VERIFIED" | "REJECTED";
+  latestRecord: KycRecord | null;
 }
 
 export const identityApi = {
   submitKyc: (payload: KycSubmitPayload) =>
-    request<ApiResponse<unknown>>("/identity/kyc", {
+    request<ApiResponse<KycRecord>>("/identity/kyc", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
 
-  getKycStatus: () => request<ApiResponse<unknown>>("/identity/kyc/status"),
+  getKycStatus: () => request<ApiResponse<KycStatusData>>("/identity/kyc/status"),
 };
 
 // ── Properties ─────────────────────────────────────────────────────────────────
