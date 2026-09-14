@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import Tesseract from "tesseract.js";
+import sharp from "sharp";
 import * as fs from "fs";
 import * as path from "path";
 import { AppError } from "../middleware/errorHandler";
@@ -14,12 +15,18 @@ export interface FraudAnalysis {
   passed: boolean;
 }
 
+export interface TamperAnalysis {
+  elaScore: number;
+  skipped: boolean;
+}
+
 export interface AIAnalysisResult {
   documentId: string;
   ocrText: string;
   fraudScore: number;
   riskScore: number;
   fraudFlags: string[];
+  elaScore: number;
   passed: boolean;
   analyzedAt: Date;
 }
@@ -42,12 +49,14 @@ export const aiService = {
 
     // Attempt to read file from disk; fall back to mock OCR text.
     let ocrText: string;
+    let elaResult: TamperAnalysis = { elaScore: 0, skipped: true };
     try {
       if (document.storageUrl) {
         const filePath = path.join(process.cwd(), document.storageUrl);
         if (fs.existsSync(filePath)) {
           const fileBuffer = fs.readFileSync(filePath);
           ocrText = await aiService.runOcr(fileBuffer);
+          elaResult = await aiService.runElaAnalysis(fileBuffer);
         } else {
           ocrText = aiService.generateMockOcrText(document.documentType);
         }
@@ -58,7 +67,11 @@ export const aiService = {
       ocrText = aiService.generateMockOcrText(document.documentType);
     }
 
-    const fraudAnalysis = aiService.detectFraud(ocrText, document.documentType);
+    const fraudAnalysis = aiService.detectFraud(
+      ocrText,
+      document.documentType,
+      elaResult
+    );
     const riskScore = aiService.computeRiskScore(
       fraudAnalysis,
       document.documentType,
@@ -85,6 +98,7 @@ export const aiService = {
           fraudScore: fraudAnalysis.fraudScore,
           riskScore,
           fraudFlags: fraudAnalysis.flags,
+          elaScore: elaResult.elaScore,
           passed: fraudAnalysis.passed,
         },
       },
@@ -96,6 +110,7 @@ export const aiService = {
       fraudScore: fraudAnalysis.fraudScore,
       riskScore,
       fraudFlags: fraudAnalysis.flags,
+      elaScore: elaResult.elaScore,
       passed: fraudAnalysis.passed,
       analyzedAt: new Date(),
     };
@@ -105,7 +120,11 @@ export const aiService = {
    * Rule-based fraud detection on extracted OCR text.
    * Returns a score (0–1), a list of flag descriptions, and a pass/fail verdict.
    */
-  detectFraud(ocrText: string, documentType: string): FraudAnalysis {
+  detectFraud(
+    ocrText: string,
+    documentType: string,
+    elaResult: TamperAnalysis
+  ): FraudAnalysis {
     let fraudScore = 0;
     const flags: string[] = [];
     const upperText = ocrText.toUpperCase();
@@ -164,6 +183,23 @@ export const aiService = {
       }
     }
 
+    // Pixel-level tamper signal from Error Level Analysis, independent of
+    // the OCR'd text — see runElaAnalysis. Only scored when the input was a
+    // JPEG the analysis could actually run on.
+    if (!elaResult.skipped) {
+      if (elaResult.elaScore > 0.45) {
+        fraudScore += 0.35;
+        flags.push(
+          "High compression-error variance detected (ELA) — possible digital tampering"
+        );
+      } else if (elaResult.elaScore > 0.25) {
+        fraudScore += 0.15;
+        flags.push(
+          "Moderate compression-error variance detected (ELA) — recommend manual review"
+        );
+      }
+    }
+
     fraudScore = Math.min(1, fraudScore);
 
     return {
@@ -214,6 +250,73 @@ export const aiService = {
       return text;
     } catch {
       return aiService.generateMockOcrText("UNKNOWN");
+    }
+  },
+
+  /**
+   * Error Level Analysis (ELA): re-saves the image as a JPEG at a fixed
+   * quality and diffs it against the original at the pixel level. A region
+   * edited after the document's last save has a different compression
+   * history than the rest of the image, so it diverges more under a fresh
+   * recompression — a real pixel-level tamper signal, independent of
+   * whatever the OCR'd text says. Free, model-free, and runs in-process
+   * (no external service or GPU) — see README.md for why this was chosen
+   * over a trained forgery-detection model for now.
+   *
+   * Only meaningful for JPEG input (the technique relies on JPEG's lossy,
+   * block-based compression); other formats are skipped rather than scored.
+   */
+  async runElaAnalysis(fileBuffer: Buffer): Promise<TamperAnalysis> {
+    try {
+      const metadata = await sharp(fileBuffer).metadata();
+      if (metadata.format !== "jpeg") {
+        return { elaScore: 0, skipped: true };
+      }
+
+      const ELA_QUALITY = 90;
+      const MAX_DIMENSION = 2000; // bounds the pixel-diff loop below
+
+      const baseline = sharp(fileBuffer).resize({
+        width: MAX_DIMENSION,
+        height: MAX_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      });
+
+      const originalRaw = await baseline.clone().raw().toBuffer();
+
+      const recompressedJpeg = await baseline
+        .clone()
+        .jpeg({ quality: ELA_QUALITY })
+        .toBuffer();
+      const recompressedRaw = await sharp(recompressedJpeg).raw().toBuffer();
+
+      const byteCount = Math.min(originalRaw.length, recompressedRaw.length);
+      if (byteCount === 0) {
+        return { elaScore: 0, skipped: true };
+      }
+
+      const HIGH_ERROR_THRESHOLD = 40; // out of 255, per colour byte
+      let sumDiff = 0;
+      let highErrorBytes = 0;
+
+      for (let i = 0; i < byteCount; i++) {
+        const diff = Math.abs(originalRaw[i] - recompressedRaw[i]);
+        sumDiff += diff;
+        if (diff > HIGH_ERROR_THRESHOLD) highErrorBytes++;
+      }
+
+      const meanError = sumDiff / byteCount / 255;
+      const highErrorRatio = highErrorBytes / byteCount;
+
+      // A large *ratio* of high-error bytes is a stronger tamper signal
+      // than overall mean error (which mostly just tracks how lossy the
+      // original JPEG already was), so it's weighted more heavily here.
+      const elaScore = Math.min(1, highErrorRatio * 4 + meanError);
+
+      return { elaScore, skipped: false };
+    } catch {
+      return { elaScore: 0, skipped: true };
     }
   },
 

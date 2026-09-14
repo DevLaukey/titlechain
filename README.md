@@ -18,7 +18,7 @@ TitleChain creates a fully digital property transaction pipeline anchored to Bas
 
 ## Key Features
 
-- **AI Fraud Detection** — OCR pipeline extracts text from title deeds and survey reports using Google Cloud Vision API, then scores each document with a `fraudScore` (0–1) and `riskScore` (0–1) before human review
+- **AI Fraud Detection** — self-hosted OCR ([Tesseract.js](https://github.com/naptha/tesseract.js)) extracts text from title deeds and survey reports, an Error Level Analysis (ELA) pass checks the document image itself for signs of digital tampering, and a rule-based scorer combines both into a `fraudScore` (0–1) and `riskScore` (0–1) before human review
 - **On-Chain Property Registry** — `PropertyRegistry.sol` (Solidity 0.8.20, OpenZeppelin `Ownable` + `Pausable`) anchors each title with an immutable `bytes32` on-chain ID, IPFS metadata hash, and current owner address
 - **Multi-Milestone Smart Escrow** — `EscrowManager.sol` (OpenZeppelin `ReentrancyGuard`) locks funds and releases them in configurable tranches (30% initial deposit, 50% on government approval, 20% on title transfer) with `nonReentrant` protection on all ETH transfers
 - **Government Registrar Workflow** — dedicated `/registrar` queue page and `/api/workflow` endpoints give REGISTRAR-role users an approval interface with RBAC enforcement; approvals and rejections are recorded in `GovApproval` and reflected in the transaction status machine
@@ -54,7 +54,7 @@ TitleChain creates a fully digital property transaction pipeline anchored to Bas
 │                                                                          │
 │  ┌──────────────────┐  ┌───────────────────┐  ┌──────────────────────┐  │
 │  │   Prisma ORM     │  │  Blockchain Svc   │  │   AI / OCR Service   │  │
-│  │  (PostgreSQL)    │  │  (Ethers.js v6)   │  │ (Google Vision API)  │  │
+│  │  (PostgreSQL)    │  │  (Ethers.js v6)   │  │ (Tesseract.js + ELA) │  │
 │  └────────┬─────────┘  └────────┬──────────┘  └──────────┬───────────┘  │
 └───────────┼────────────────────┼─────────────────────────┼──────────────┘
             │                    │                          │
@@ -86,12 +86,36 @@ TitleChain creates a fully digital property transaction pipeline anchored to Bas
 | Database | PostgreSQL 15 | Relational data — users, properties, transactions |
 | Blockchain | Hardhat, Ethers.js v6, Solidity 0.8.20 | Smart contract compile, test, deploy |
 | Contract Safety | OpenZeppelin 5 (`Ownable`, `Pausable`, `ReentrancyGuard`) | Audited security primitives |
-| AI / OCR | Google Cloud Vision API | Document text extraction and fraud scoring |
+| AI / OCR | Tesseract.js (self-hosted) + Error Level Analysis (`sharp`) | Document text extraction, pixel-level tamper detection, and fraud scoring |
 | Document Storage | IPFS + Pinata | Decentralised, content-addressed file pinning |
 | Authentication | JWT (jsonwebtoken), bcryptjs | Stateless auth, bcrypt password hashing (cost 12) |
 | Infrastructure | Docker 24, Docker Compose 2, nginx | Containerised deployment, reverse proxy |
 | Monorepo | npm workspaces | `apps/api`, `apps/web`, `packages/contracts`, `packages/shared` |
 | Runtime | Node.js 20 | Minimum required version |
+
+---
+
+## AI / Fraud Detection Pipeline
+
+Document verification runs entirely self-hosted — no external AI API or key is required, which keeps the pipeline free to run and easy to deploy.
+
+1. **OCR** — [Tesseract.js](https://github.com/naptha/tesseract.js) extracts raw text from the uploaded title deed, survey report, ID, or passport image.
+2. **Tamper detection (ELA)** — an Error Level Analysis pass (`apps/api/src/services/ai.service.ts`, via [`sharp`](https://sharp.pixelplumbing.com/)) re-saves the JPEG at a fixed quality and diffs it against the original at the pixel level. A region edited after the document's last save carries a different compression history than the rest of the image, so it diverges more under a fresh recompression — a real pixel-level fraud signal, independent of what the OCR'd text says. It only applies to JPEG input; other formats are skipped rather than scored.
+3. **Rule-based scoring** — regex/keyword checks on the OCR'd text (cancellation markers, missing required keywords, corrupted text, uncertified duplicates) combine with the ELA score into a single `fraudScore` (0–1) and `riskScore` (0–1) per document, persisted on `PropertyDocument` and written to `AuditLog`.
+
+This is intentionally a heuristic MVP pipeline, not a trained model — see **Roadmap** below for the planned upgrade path.
+
+---
+
+## Roadmap
+
+**Next versions — real trained computer-vision models for document fraud detection.** The current ELA check is a free, model-free heuristic chosen for the MVP because it runs in-process in the existing Node/Express API with no GPU, no external service, and no added Docker complexity. It's a real signal, but it only catches JPEG recompression artifacts and won't catch every kind of forgery.
+
+Planned upgrade path:
+- Stand up a small **Python inference microservice** (FastAPI or similar) alongside `apps/api`, since the strongest open forgery-detection models are PyTorch-based and don't have a Node equivalent.
+- Integrate a pretrained, free/open-source forgery-localization model — leading candidates are [**TruFor**](https://grip-unina.github.io/TruFor/) (CVPR 2023, CC-BY-licensed weights) and [**CAT-Net**](https://github.com/topics/image-forgery-detection) — which detect splicing/copy-move manipulation from compression and noise artifacts, well beyond what plain ELA can see.
+- For the KYC flow specifically, add ID-document structured parsing (MRZ extraction for passports/national IDs) and an ID-photo-to-selfie face match, to move KYC verification beyond keyword matching on OCR text.
+- Keep the current ELA + rule-based scorer as a fast, zero-infra first pass, and only escalate to the heavier model for documents that don't clear it outright — cheaper to run and keeps the free-tier deployment path viable for documents that already pass cleanly.
 
 ---
 
@@ -123,7 +147,7 @@ cd packages/contracts && npx hardhat run scripts/deploy.ts --network localhost
 | Identity & KYC | User registration, JWT auth, KYC document submission (PASSPORT / NATIONAL_ID), status tracking | Complete |
 | Property Registry | Create, list, and manage properties with title number, land area, property type, and estimated value | Complete |
 | Document Management | Upload title deeds, survey reports, and valuation certificates; IPFS storage via Pinata | Complete |
-| AI Verification | Google Vision OCR extracts document text; `fraudScore` and `riskScore` (0–1 scale) persisted per document | Complete |
+| AI Verification | Tesseract.js OCR extracts document text; an Error Level Analysis (ELA) pass scores the image itself for tamper signs; `fraudScore` and `riskScore` (0–1 scale) persisted per document | Complete |
 | Blockchain Anchor | `PropertyRegistry.sol` registers each approved property on-chain; `onChainId` and `blockchainTxHash` stored in DB | Complete |
 | Transaction Engine | Full buyer-seller transaction initiation with 7-stage status machine | Complete |
 | Smart Escrow | `EscrowManager.sol` three-milestone escrow (30 / 50 / 20%); REGISTRAR-gated milestone release | Complete |
@@ -137,7 +161,7 @@ cd packages/contracts && npx hardhat run scripts/deploy.ts --network localhost
 1. **KYC Registration** — Buyer and seller register accounts and submit government-issued ID documents. KYC status must be `VERIFIED` before transacting.
 2. **Property Registration** — Seller creates a property record (`DRAFT` status) with address, land area, property type, and estimated value in KES.
 3. **Document Upload** — Seller uploads title deeds, survey reports, and other certificates via `POST /api/property/:id/documents`. Files are stored via IPFS.
-4. **AI Document Review** — `POST /api/ai/analyze/:documentId` calls Google Cloud Vision API to OCR each document and compute `fraudScore` and `riskScore`. Clean documents score below 0.10 on both metrics.
+4. **AI Document Review** — `POST /api/ai/analyze/:documentId` runs Tesseract.js OCR and an Error Level Analysis (ELA) tamper check on each document, then computes `fraudScore` and `riskScore`. Clean documents score below 0.10 on both metrics.
 5. **Blockchain Registration** — Admin or registrar calls `POST /api/blockchain/property/register` to anchor the property on-chain via `PropertyRegistry.sol`. Property status advances to `APPROVED`; `onChainId` and `blockchainTxHash` are persisted.
 6. **Transaction Initiation** — Buyer initiates a transaction against the approved property via `POST /api/transactions`. Status: `INITIATED`.
 7. **Smart Escrow Funding** — Buyer creates a three-milestone escrow via `POST /api/escrow` and funds it via `POST /api/escrow/:id/fund`. Milestone 1 (30%) is released on funding. Status: `ESCROW_FUNDED`.
