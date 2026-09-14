@@ -15,6 +15,38 @@ import {
   ClipboardList,
 } from "lucide-react";
 
+// `roles` mirrors the backend's rbac() guards for each action (see
+// apps/api/src/routes/*.routes.ts) — omit it to show an action to every role.
+const QUICK_ACTIONS: {
+  href: string;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  roles?: string[];
+}[] = [
+  {
+    href: "/properties/new",
+    label: "Register Property",
+    description: "Add a new property",
+    icon: PlusSquare,
+    roles: ["SELLER", "ADMIN"], // POST /property is rbac'd to SELLER/ADMIN
+  },
+  {
+    href: "/transactions",
+    label: "Start Transaction",
+    description: "Initiate a transfer",
+    icon: ArrowLeftRight,
+    roles: ["BUYER", "SELLER", "ADMIN"],
+  },
+  {
+    href: "/audit",
+    label: "View Audit Log",
+    description: "Full activity trail",
+    icon: ClipboardList,
+    roles: ["REGISTRAR", "ADMIN"],
+  },
+];
+
 function StatCard({
   label,
   value,
@@ -67,6 +99,10 @@ export default function DashboardPage() {
 
   const displayName =
     user?.firstName ?? user?.email?.split("@")[0] ?? "there";
+
+  const visibleQuickActions = QUICK_ACTIONS.filter(
+    (action) => !action.roles || (user && action.roles.includes(user.role))
+  );
 
   return (
     <DashboardLayout title="Overview">
@@ -232,57 +268,32 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div>
-        <h3 className="text-sm font-semibold text-white/40 mb-3 tracking-widest uppercase">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Link
-            href="/properties/new"
-            className="flex items-center gap-3 p-4 bg-[#0d0d0d] border border-white/8 rounded-lg hover:border-gold/30 hover:bg-gold/5 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-              <PlusSquare className="w-4 h-4 text-gold" />
-            </div>
-            <div>
-              <p className="text-white text-sm font-medium group-hover:text-gold transition-colors">
-                Register Property
-              </p>
-              <p className="text-white/30 text-xs">Add a new property</p>
-            </div>
-          </Link>
-
-          <Link
-            href="/transactions"
-            className="flex items-center gap-3 p-4 bg-[#0d0d0d] border border-white/8 rounded-lg hover:border-gold/30 hover:bg-gold/5 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-              <ArrowLeftRight className="w-4 h-4 text-gold" />
-            </div>
-            <div>
-              <p className="text-white text-sm font-medium group-hover:text-gold transition-colors">
-                Start Transaction
-              </p>
-              <p className="text-white/30 text-xs">Initiate a transfer</p>
-            </div>
-          </Link>
-
-          <Link
-            href="/audit"
-            className="flex items-center gap-3 p-4 bg-[#0d0d0d] border border-white/8 rounded-lg hover:border-gold/30 hover:bg-gold/5 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
-              <ClipboardList className="w-4 h-4 text-gold" />
-            </div>
-            <div>
-              <p className="text-white text-sm font-medium group-hover:text-gold transition-colors">
-                View Audit Log
-              </p>
-              <p className="text-white/30 text-xs">Full activity trail</p>
-            </div>
-          </Link>
+      {visibleQuickActions.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-white/40 mb-3 tracking-widest uppercase">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {visibleQuickActions.map(({ href, label, description, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center gap-3 p-4 bg-[#0d0d0d] border border-white/8 rounded-lg hover:border-gold/30 hover:bg-gold/5 transition-colors group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-4 h-4 text-gold" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-medium group-hover:text-gold transition-colors">
+                    {label}
+                  </p>
+                  <p className="text-white/30 text-xs">{description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </DashboardLayout>
   );
 }
