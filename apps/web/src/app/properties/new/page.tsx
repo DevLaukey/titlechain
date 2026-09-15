@@ -95,7 +95,7 @@ export default function NewPropertyPage() {
         {/* Back link */}
         <Link
           href="/properties"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-6"
+          className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors mb-6"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -104,33 +104,35 @@ export default function NewPropertyPage() {
         </Link>
 
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-slate-900">Register a Property</h2>
-          <p className="text-slate-500 mt-1">
+          <h2 className="text-2xl font-bold text-white tracking-tight">Register a Property</h2>
+          <p className="text-white/40 mt-1 text-sm">
             Provide accurate details about the property. A unique title number
             will be generated automatically upon submission.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700 text-sm">{error}</p>
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Property Type */}
           <div className="card p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Property Type</h3>
+            <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-4">
+              Property Type
+            </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {PROPERTY_TYPES.map(({ value, label }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, propertyType: value }))}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium text-sm transition-colors ${
+                  className={`px-4 py-3 rounded-lg border-2 font-semibold text-sm transition-colors ${
                     form.propertyType === value
-                      ? "border-primary-600 bg-primary-50 text-primary-700"
-                      : "border-slate-200 text-slate-600 hover:border-primary-200"
+                      ? "border-gold bg-gold/10 text-gold"
+                      : "border-white/10 text-white/40 hover:border-gold/30 hover:text-white/60"
                   }`}
                 >
                   {label}
@@ -141,14 +143,16 @@ export default function NewPropertyPage() {
 
           {/* Location */}
           <div className="card p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">Location</h3>
+            <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-4">
+              Location
+            </h3>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="address"
-                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                  className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                 >
-                  Street Address <span className="text-red-500">*</span>
+                  Street Address <span className="text-red-400">*</span>
                 </label>
                 <input
                   id="address"
@@ -166,9 +170,9 @@ export default function NewPropertyPage() {
                 <div>
                   <label
                     htmlFor="city"
-                    className="block text-sm font-medium text-slate-700 mb-1.5"
+                    className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                   >
-                    City <span className="text-red-500">*</span>
+                    City <span className="text-red-400">*</span>
                   </label>
                   <input
                     id="city"
@@ -184,9 +188,9 @@ export default function NewPropertyPage() {
                 <div>
                   <label
                     htmlFor="state"
-                    className="block text-sm font-medium text-slate-700 mb-1.5"
+                    className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                   >
-                    State / Region <span className="text-red-500">*</span>
+                    State / Region <span className="text-red-400">*</span>
                   </label>
                   <input
                     id="state"
@@ -205,9 +209,9 @@ export default function NewPropertyPage() {
                 <div>
                   <label
                     htmlFor="country"
-                    className="block text-sm font-medium text-slate-700 mb-1.5"
+                    className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                   >
-                    Country <span className="text-red-500">*</span>
+                    Country <span className="text-red-400">*</span>
                   </label>
                   <input
                     id="country"
@@ -223,7 +227,7 @@ export default function NewPropertyPage() {
                 <div>
                   <label
                     htmlFor="postalCode"
-                    className="block text-sm font-medium text-slate-700 mb-1.5"
+                    className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                   >
                     Postal Code
                   </label>
@@ -243,7 +247,7 @@ export default function NewPropertyPage() {
 
           {/* Property Details */}
           <div className="card p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">
+            <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-4">
               Property Measurements & Value
             </h3>
             <div className="space-y-4">
@@ -251,7 +255,7 @@ export default function NewPropertyPage() {
                 <div>
                   <label
                     htmlFor="landArea"
-                    className="block text-sm font-medium text-slate-700 mb-1.5"
+                    className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                   >
                     Land Area
                   </label>
@@ -270,7 +274,7 @@ export default function NewPropertyPage() {
                 <div>
                   <label
                     htmlFor="landAreaUnit"
-                    className="block text-sm font-medium text-slate-700 mb-1.5"
+                    className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                   >
                     Unit
                   </label>
@@ -293,12 +297,12 @@ export default function NewPropertyPage() {
               <div>
                 <label
                   htmlFor="estimatedValue"
-                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                  className="block text-xs font-medium text-white/50 mb-1.5 tracking-wide uppercase"
                 >
                   Estimated Value (USD)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 font-medium">
                     $
                   </span>
                   <input
@@ -318,10 +322,10 @@ export default function NewPropertyPage() {
           </div>
 
           {/* Info box */}
-          <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg">
+          <div className="p-4 bg-gold/5 border border-gold/20 rounded-lg">
             <div className="flex gap-3">
               <svg
-                className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5"
+                className="w-5 h-5 text-gold flex-shrink-0 mt-0.5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -334,12 +338,12 @@ export default function NewPropertyPage() {
                 />
               </svg>
               <div>
-                <p className="text-sm font-medium text-primary-800">
+                <p className="text-sm font-medium text-gold">
                   What happens next?
                 </p>
-                <p className="text-sm text-primary-700 mt-1">
+                <p className="text-sm text-white/50 mt-1">
                   After submission your property will be in{" "}
-                  <strong>DRAFT</strong> status. Upload title deeds and
+                  <strong className="text-white/70">DRAFT</strong> status. Upload title deeds and
                   supporting documents, then submit for registrar review. Once
                   approved, the title will be anchored to the blockchain.
                 </p>
